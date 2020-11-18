@@ -6,8 +6,9 @@ public class Hangman {
 	ArrayList<String> wordList;
 	String word;
 	String[] revealed;
-	ArrayList<String> correct;
-	ArrayList<String> mistakes;
+	boolean[] isCorrected;
+	ArrayList<String> correctGuess;
+	ArrayList<String> mistakeGuess;
 	int mistakeTimes;
 	ArrayList<String> wordFamily;
 	Map<String, ArrayList<String>> diffFamilies = new HashMap<String, ArrayList<String>>();
@@ -54,6 +55,20 @@ public class Hangman {
 	}
 	
 	/**
+	 * Set the guess word pattern according to the length user choose
+	 * Also initialize the correctness array
+	 * @param length
+	 */
+	public void setRevealed(int length) {
+		this.revealed = new String[length];
+		this.isCorrected = new boolean[length];
+		for(int i=0; i<length; i++) {
+			this.revealed[i] = "_";
+			this.isCorrected[i] = false;
+		}
+	}
+	
+	/**
 	 * Get the user input for guessing
 	 * and check if the input is valid or have guessed before,
 	 * then turn the guessed letter to lower case
@@ -73,7 +88,7 @@ public class Hangman {
 				continue;
 			}else if(ch >= 'A' && ch <= 'Z') {
 				guess = guess.toLowerCase();
-			}else if(this.correct.contains(guess)||this.mistakes.contains(guess)) {
+			}else if(this.correctGuess.contains(guess)||this.mistakeGuess.contains(guess)) {
 				System.out.println("This character has been guessed before, pleas try another one!");
 				continue;
 			}else {
@@ -94,12 +109,13 @@ public class Hangman {
 		for(int i=0; i<this.revealed.length; i++) {
 			if(this.revealed[i].contains(guess)) {
 				correct = true;
-				this.correct.add(guess);
+				this.correctGuess.add(guess);
+				this.isCorrected[i] = true;
 			}
 		}
 		
 		if(!correct) {
-			this.mistakes.add(guess);
+			this.mistakeGuess.add(guess);
 			this.mistakeTimes += 1;
 		}
 		return correct;
@@ -189,6 +205,23 @@ public class Hangman {
 		}
 		return key;
 	}
+	
+	
+	public boolean gameIsOver() {
+		boolean end = false;
+		int count = 0;
+		for(int i=0; i<this.isCorrected.length; i++) {
+			if(isCorrected[i] == true) {
+				count++;
+			}
+		}
+		if(count == this.isCorrected.length | this.mistakeTimes>=6) {
+			end = true;
+		}
+		
+		return end;
+	}
+	
 	
 	
 	public static void main(String[] args) {
