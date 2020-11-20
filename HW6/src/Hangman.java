@@ -12,8 +12,7 @@ public class Hangman {
 	ArrayList<String> mistakeGuess = new ArrayList<String>();
 	int mistakeTimes;
 	ArrayList<String> wordFamily;
-	Map<String, ArrayList<String>> diffFamilies = new HashMap<String, ArrayList<String>>();
-
+	
 
 	
 	
@@ -28,6 +27,9 @@ public class Hangman {
 //		int randomIndex = random.nextInt(wordList.size());
 //		return wordList.get(randomIndex);
 //	}
+	
+	
+	
 	public void printRevealed() {
 		for(int i=0; i<this.revealed.length; i++) {
 			System.out.print(this.revealed[i]+" ");
@@ -36,17 +38,42 @@ public class Hangman {
 	}
 	
 	/**
+	 * Get all the possible length of word of the wordList
+	 * @return a HaseSet contains all possible length
+	 */
+	public HashSet<Integer> getPossibleLength(){
+		int length;
+		HashSet<Integer> possibleLength = new HashSet<Integer>();
+		for(String word: this.wordList) {
+			length = word.length();
+			if(!possibleLength.contains(length)) {
+				possibleLength.add(length);
+			}
+		}
+		
+		return possibleLength;
+	}
+	
+	
+	/**
 	 * Ask the user for the length of word the user want to guess
-	 * @param scnr
+	 * @param scnr, HashSet of possibleLength
 	 * @return
 	 */
-	public int getLength(Scanner scnr) {
+	public int getLength(Scanner scnr, HashSet<Integer> possibleLength) {
 		System.out.println("Welcome to the Hangman game. You are allowed to make mistakes 6 times." + "\n" + "How long would you want the word to be?");
+		String input;
 		int length;
 		while(true) {
-			length = scnr.nextInt();
-			if(length>21||length<2) {
-				System.out.println("Please input a number between 2 and 20");
+			try {
+				input = scnr.next();
+				length = Integer.parseInt(input);
+				if(!possibleLength.contains(length)) {
+					System.out.println("Please input a number between 2 and 20");
+					continue;
+				}
+			}catch(Exception e){
+				System.out.println("Please input a number.");
 				continue;
 			}
 			break;
@@ -85,7 +112,10 @@ public class Hangman {
 			var ch = input.charAt(0);
 			guess = Character.toString(ch);
 			guess = guess.toLowerCase();
-			if(!((ch >= 'a' && ch <= 'z')||(ch >= 'A' && ch <= 'Z'))) {
+			if(input.length()>1) {
+				System.out.println("This is not a valid guess, please only input one letter.");
+				continue;
+			}else if(!((ch >= 'a' && ch <= 'z')||(ch >= 'A' && ch <= 'Z'))) {
 				System.out.println("This is not a valid guess, please try another one!");
 				continue;
 			}else if(this.correctGuess.contains(guess)||this.mistakeGuess.contains(guess)) {
@@ -140,26 +170,19 @@ public class Hangman {
 	}
 	
 	
-//	public boolean isCorrect(String letter) {
-//		boolean correct = false;
-//		for(int i =0; i < this.revealed.length(); i++) {
-//			
-//		}
-//	}
-	
 	
 	/**
 	 * Given a set length, return a Array list of words of that length
 	 * @param length: length of the word user want to guess
 	 */
-	void setInitialWordFamily(int length){
+	public ArrayList<String> getInitialWordFamily(int length){
 		ArrayList<String> sameLengthList = new ArrayList<String>();
 		for (String word: this.wordList) {
 			if(word.length() == length) {
 				sameLengthList.add(word);
 			}
 		}
-		this.wordFamily = sameLengthList;
+		return sameLengthList;
 	}
 
 	
@@ -167,18 +190,17 @@ public class Hangman {
 	 * update the word families every time user guessed a letter
 	 * @param letter
 	 */
-	public void getFamilies(String letter) {
-		this.diffFamilies.clear();
-
+	public ArrayList<String> getFamilies(String letter, ArrayList<String> currWordFamily) {
 		String key;
 		String word;
 		String[] currPattern;
-		ArrayList<String> wordList; //words that belong to a word family
-		for(int i=0; i<this.wordFamily.size(); i++) {
+		ArrayList<String> currPatternWordList; //words that belong to a word family
+		Map<String, ArrayList<String>> diffFamilies = new HashMap<String, ArrayList<String>>();
+		for(int i=0; i<currWordFamily.size(); i++) {
 			key = "";
-			wordList = new ArrayList<>();
+			currPatternWordList = new ArrayList<>();
 			currPattern = this.revealed.clone();
-			word = this.wordFamily.get(i);
+			word = currWordFamily.get(i);
 			for(int j=0; j<word.length(); j++) {
 				if(currPattern[j].contains("_")){
 					if(letter.charAt(0) == word.charAt(j)) {
@@ -191,26 +213,28 @@ public class Hangman {
 			for(int n=0; n<currPattern.length; n++) {
 				key += currPattern[n];
 			}
-			if(!this.diffFamilies.containsKey(key)) {
-				wordList.add(word);
-				this.diffFamilies.put(key, wordList);
+			if(!diffFamilies.containsKey(key)) {
+				currPatternWordList.add(word);
+				diffFamilies.put(key, currPatternWordList);
 			}else {
-				wordList = this.diffFamilies.get(key);
+				currPatternWordList = diffFamilies.get(key);
+				currPatternWordList.add(word);
+				diffFamilies.replace(key, currPatternWordList);
 			}
 			
 		}
 		
 		//find the biggest word family
 		String biggestPattern;
-		biggestPattern = this.getBiggestWordsFamily(this.diffFamilies);
-		ArrayList<String> newWordFamily = this.diffFamilies.get(biggestPattern);
-		
+		biggestPattern = this.getEvilestWordsFamily(diffFamilies, letter);
+		ArrayList<String> newWordFamily = diffFamilies.get(biggestPattern);
+
 		//update the word family and revealed word
-		this.wordFamily.clear();
-		this.wordFamily = newWordFamily;
 		for(int i=0; i<this.revealed.length; i++) {
 			this.revealed[i] = String.valueOf(biggestPattern.charAt(i));
 		}
+		
+		return newWordFamily;
 	}
 	
 	
@@ -219,21 +243,52 @@ public class Hangman {
 	 * @param wordFamilies
 	 * @return
 	 */
-	String getBiggestWordsFamily(Map<String, ArrayList<String>> wordFamilies) {
+	String getEvilestWordsFamily(Map<String, ArrayList<String>> wordFamilies, String letter) {
 		int max = 0;
 		int num;
 		String key = null;
+		
+		//get length of the largest word families 
 		for(Map.Entry<String, ArrayList<String>> entry: wordFamilies.entrySet()) {
 			num = entry.getValue().size();
 			if(num > max) {
 				max = num;
-				key = entry.getKey();
 			}
 		}
+		
+		//get the keys of the largest families and store it in an ArrayList
+		ArrayList<String> familiesKeys = new ArrayList<String>();
+		for(Map.Entry<String, ArrayList<String>> entry: wordFamilies.entrySet()) {
+			if(max == entry.getValue().size()) {
+				familiesKeys.add(entry.getKey());
+			}	
+		}
+		
+		//find the evilest pattern!
+
+		int min = familiesKeys.get(0).length();
+		for(String pattern: familiesKeys) {
+			int count = 0;
+			for(int i=0; i<pattern.length(); i++) {
+				if(pattern.charAt(i) == letter.charAt(0)) {
+					count += 1;
+				}
+			}
+			if(count<min) {
+				min = count;
+				key = pattern;
+			}
+		}
+		
 		return key;
 	}
 	
-	
+	/**
+	 * Determine whether the game is now over
+	 * The game is over if all the letters are guessed
+	 * or the mistakes times is more than 6
+	 * @return boolean of game over status
+	 */
 	public boolean gameIsOver() {
 		boolean end = false;
 		int count = 0;
@@ -249,7 +304,9 @@ public class Hangman {
 		return end;
 	}
 	
-	
+	/**
+	 * Print the final result of the game
+	 */
 	public void printResult() {
 		System.out.println("The Hangman game is now over.");
 		System.out.println("You guessed "+ (this.correctGuess.size()+this.mistakeTimes) + " times.");
@@ -258,11 +315,17 @@ public class Hangman {
 	
 	
 	
+	public ArrayList<String> getWordFamily() {
+		return wordFamily;
+	}
+
+
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Hangman hangman = new Hangman("short_list.txt");
 //		hangman.revealed = new String[]{"_","_","_","_"};
-		Scanner s = new Scanner(System.in);
+//		Scanner s = new Scanner(System.in);
 		//hangman.getLength(s);
 		//System.out.println();
 //		hangman.printRevealed();
