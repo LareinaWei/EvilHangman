@@ -1,4 +1,3 @@
-import java.awt.desktop.SystemSleepEvent;
 import java.util.*;
 
 public class Hangman {
@@ -8,11 +7,10 @@ public class Hangman {
 	String word;
 	String[] revealed;
 	boolean[] isCorrected;
+	boolean success;
 	ArrayList<String> correctGuess = new ArrayList<String>();
 	ArrayList<String> mistakeGuess = new ArrayList<String>();
 	int mistakeTimes;
-	ArrayList<String> wordFamily;
-	
 
 	
 	
@@ -21,15 +19,9 @@ public class Hangman {
 		this.wordList = fileReader.getWordList();
 	}
 
-
-//	String getRandomWord(ArrayList<String> wordList) {
-//		Random random = new Random();
-//		int randomIndex = random.nextInt(wordList.size());
-//		return wordList.get(randomIndex);
-//	}
-	
-	
-	
+	/**
+	 * Print the current revealed pattern
+	 */
 	public void printRevealed() {
 		for(int i=0; i<this.revealed.length; i++) {
 			System.out.print(this.revealed[i]+" ");
@@ -61,7 +53,10 @@ public class Hangman {
 	 * @return
 	 */
 	public int getLength(Scanner scnr, HashSet<Integer> possibleLength) {
+		int min = Collections.min(possibleLength);
+		int max = Collections.max(possibleLength);
 		System.out.println("Welcome to the Hangman game. You are allowed to make mistakes 6 times." + "\n" + "How long would you want the word to be?");
+		System.out.println("Please try input a number between: "+ min + " and " + max +".");
 		String input;
 		int length;
 		while(true) {
@@ -69,7 +64,7 @@ public class Hangman {
 				input = scnr.next();
 				length = Integer.parseInt(input);
 				if(!possibleLength.contains(length)) {
-					System.out.println("Please input a number between 2 and 20");
+					System.out.println("Unfortunately we don't have a word of this length. Please try another number.");
 					continue;
 				}
 			}catch(Exception e){
@@ -156,17 +151,23 @@ public class Hangman {
 	 * and the remaining mistake times
 	 * @param guess
 	 */
-	void printMistakeGuess(String guess) {
-		System.out.println("Unfortunatly, this guess is wrong.");
-		System.out.print("Current mistakes: ");
+	void printGuessMessage(String guess, boolean correct) {
+		if(!correct){
+			System.out.println("Unfortunatly, this guess is wrong.");
+			if(this.mistakeTimes <= 6) {
+				System.out.println("Your remaining mistake chances left: " + (6-this.mistakeTimes)+".");
+			}else {
+				System.out.println("Sorry, you ran out of mistake chances.");
+			}
+		}else {
+			System.out.println("Congratulation, this is a successful guess."
+					+ "\nThe letter has been put into the word.");
+		}
+		System.out.print("Current incorrect guesses: ");
 		for(int i=0; i<this.mistakeGuess.size(); i++) {
 			System.out.print(this.mistakeGuess.get(i)+" ");
 		}
-		if(this.mistakeTimes <= 6) {
-			System.out.print("\nYour remaining mistake chances left: " + (6-this.mistakeTimes) + "\n");
-		}else {
-			System.out.println("Sorry, you ran out of mistake chances.\n");
-		}
+		System.out.print("\n");
 	}
 	
 	
@@ -298,6 +299,7 @@ public class Hangman {
 			}
 		}
 		if(count == this.isCorrected.length | this.mistakeTimes>6) {
+			this.success = true;
 			end = true;
 		}
 		
@@ -308,43 +310,16 @@ public class Hangman {
 	 * Print the final result of the game
 	 */
 	public void printResult() {
-		System.out.println("The Hangman game is now over.");
+		if(this.success) {
+			System.out.print("Congratulations! You win the game.");
+		}else {
+			System.out.println("The Hangman game is now over.");
+		}
 		System.out.println("You guessed "+ (this.correctGuess.size()+this.mistakeTimes) + " times.");
 		System.out.println("You made " + this.mistakeTimes + " mistakes.\nThanks for playing.");
 	}
 	
-	
-	
-	public ArrayList<String> getWordFamily() {
-		return wordFamily;
-	}
-
-
-
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		Hangman hangman = new Hangman("short_list.txt");
-//		hangman.revealed = new String[]{"_","_","_","_"};
-//		Scanner s = new Scanner(System.in);
-		//hangman.getLength(s);
-		//System.out.println();
-//		hangman.printRevealed();
-//		hangman.isCorrected = new boolean[] {true, false, true, true};
-//		hangman.mistakeTimes = 6;
-//		System.out.println(hangman.gameIsOver());
-//		hangman.getGuess(s);
-//		String a = "Asdf";
-//		a = a.toLowerCase();
-//		System.out.println(a);
-//		hangman.printMistakeGuess("a");
-		
-//		
-//		hangman.setInitialWordFamily(4);
-//		hangman.setRevealed(4);
-//		String letter = hangman.getGuess(s);
-//		hangman.getFamilies(letter);
 		
 
-	}
 
 }
