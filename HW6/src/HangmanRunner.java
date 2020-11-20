@@ -8,17 +8,22 @@ public class HangmanRunner {
 		boolean correct;
 		boolean end = false;
 		String guess;
-		length = hangman.getLength(scnr);
-		hangman.setInitialWordFamily(length);
+		ArrayList<String> currWordFamily = new ArrayList<String>();
+		HashSet<Integer> possibleLength = new HashSet<Integer>();
+		
+		possibleLength = hangman.getPossibleLength();
+		length = hangman.getLength(scnr, possibleLength);
+		currWordFamily = hangman.getInitialWordFamily(length);
 		hangman.setRevealed(length);
 		System.out.println("The game has started.");
 		hangman.printRevealed();
 		while(end == false) {
 			guess = hangman.getGuess(scnr);
 			
-			System.out.println("guess: "+ guess +"\n");
+//			System.out.println("guess: "+ guess +"\n");
 			
-			hangman.getFamilies(guess);
+			currWordFamily = hangman.getFamilies(guess, currWordFamily);
+			
 
 			correct = hangman.correctGuess(guess);
 			
@@ -44,7 +49,7 @@ public class HangmanRunner {
 		Scanner scnr = new Scanner(System.in);
 		
 		HangmanRunner runner = new HangmanRunner();
-		runner.playHangmanGame("engDictionary.txt", scnr);
+		runner.playHangmanGame("short_list.txt", scnr);
 		
 	}
 	
