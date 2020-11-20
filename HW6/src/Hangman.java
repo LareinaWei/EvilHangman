@@ -1,4 +1,5 @@
 import java.util.*;
+// Author: Yuhao Wei, Kun Qian
 
 public class Hangman {
 	
