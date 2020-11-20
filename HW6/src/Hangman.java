@@ -162,6 +162,11 @@ public class Hangman {
 		this.wordFamily = sameLengthList;
 	}
 
+	
+	/**
+	 * update the word families every time user guessed a letter
+	 * @param letter
+	 */
 	public void getFamilies(String letter) {
 		this.diffFamilies.clear();
 
@@ -275,6 +280,7 @@ public class Hangman {
 //		hangman.setRevealed(4);
 //		String letter = hangman.getGuess(s);
 //		hangman.getFamilies(letter);
+		
 
 	}
 
